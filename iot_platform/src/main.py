@@ -5,15 +5,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from src.models.user import db, User, UserSession
+from src.models.user import db, User, UserSession, Role, Permission
 from src.routes.user import user_bp
 from src.routes.device import device_bp
 from src.routes.auth import auth_bp
 from src.routes.organization import organization_bp
 from src.routes.matter_thread import matter_thread_bp
 from src.routes.analytics import analytics_bp
+from src.routes.billing import billing_bp
+from src.routes.rbac import rbac_bp
 from src.models.device import Device, DeviceData, AutomationRule, ThreadNetwork
 from src.models.organization import Organization, Location, Room, OrganizationMember
+from src.models.billing import Subscription, Invoice, PaymentMethod, UsageRecord
+from src.services.rbac_service import RBACService
 from src.services.mqtt_service import init_mqtt_service
 from src.services.automation_engine import init_automation_engine, create_sample_rules
 
@@ -29,6 +33,8 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(organization_bp, url_prefix='/api')
 app.register_blueprint(matter_thread_bp, url_prefix='/api')
 app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+app.register_blueprint(billing_bp, url_prefix='/api')
+app.register_blueprint(rbac_bp, url_prefix='/api/rbac')
 
 # uncomment if you need to use database
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
@@ -48,19 +54,28 @@ with app.app_context():
     if AutomationRule.query.count() == 0:
         create_sample_rules()
     
+    # Initialize RBAC system
+    RBACService.initialize_default_roles_and_permissions()
+    print("RBAC system initialized with default roles and permissions")
+    
     # Create default admin user if no users exist
     if User.query.count() == 0:
+        # Get admin role
+        admin_role = Role.query.filter_by(name='admin').first()
+        user_role = Role.query.filter_by(name='user').first()
+        
         admin_user = User(
             username='admin',
             email='admin@iot-platform.com',
-            role='admin'
+            role_id=admin_role.id if admin_role else None,
+            is_superuser=True
         )
         admin_user.set_password('admin123')
         
         demo_user = User(
             username='demo',
             email='demo@iot-platform.com',
-            role='user'
+            role_id=user_role.id if user_role else None
         )
         demo_user.set_password('demo123')
         

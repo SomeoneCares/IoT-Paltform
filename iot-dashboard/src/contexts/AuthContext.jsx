@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch(`${API_BASE}/auth/profile`, {
+      const response = await fetch(`${API_BASE}/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       
       if (response.ok) {
         const data = await response.json()
-        setUser(data.user)
+        setUser(data)
       } else {
         // Token is invalid, clear it
         logout()
@@ -101,16 +101,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token')
   }
 
-  const hasPermission = (permission) => {
+  const hasPermission = (resource, action) => {
     if (!user) return false
     
-    const permissions = {
-      'admin': ['read', 'write', 'delete', 'manage_users', 'manage_devices', 'manage_rules'],
-      'user': ['read', 'write', 'manage_devices', 'manage_rules'],
-      'guest': ['read']
+    // Superusers have all permissions
+    if (user.is_superuser) return true
+    
+    // Check if user has the specific permission
+    if (user.permissions) {
+      return user.permissions.some(permission => 
+        permission.resource === resource && permission.action === action
+      )
     }
     
-    return permissions[user.role]?.includes(permission) || false
+    return false
   }
 
   const value = {

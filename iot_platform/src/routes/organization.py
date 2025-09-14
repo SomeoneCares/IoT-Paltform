@@ -137,6 +137,27 @@ def create_location(current_user, org_id):
     
     data = request.get_json()
     
+    # Handle latitude and longitude conversion
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    
+    # Convert empty strings to None, otherwise try to convert to float
+    if latitude == '' or latitude is None:
+        latitude = None
+    else:
+        try:
+            latitude = float(latitude)
+        except (ValueError, TypeError):
+            latitude = None
+    
+    if longitude == '' or longitude is None:
+        longitude = None
+    else:
+        try:
+            longitude = float(longitude)
+        except (ValueError, TypeError):
+            longitude = None
+    
     location = Location(
         name=data['name'],
         description=data.get('description'),
@@ -145,8 +166,8 @@ def create_location(current_user, org_id):
         state=data.get('state'),
         country=data.get('country'),
         postal_code=data.get('postal_code'),
-        latitude=data.get('latitude'),
-        longitude=data.get('longitude'),
+        latitude=latitude,
+        longitude=longitude,
         organization_id=org_id
     )
     
@@ -187,8 +208,28 @@ def update_location(current_user, location_id):
     location.state = data.get('state', location.state)
     location.country = data.get('country', location.country)
     location.postal_code = data.get('postal_code', location.postal_code)
-    location.latitude = data.get('latitude', location.latitude)
-    location.longitude = data.get('longitude', location.longitude)
+    
+    # Handle latitude and longitude conversion
+    latitude = data.get('latitude', location.latitude)
+    longitude = data.get('longitude', location.longitude)
+    
+    # Convert empty strings to None, otherwise try to convert to float
+    if latitude == '' or latitude is None:
+        location.latitude = None
+    else:
+        try:
+            location.latitude = float(latitude)
+        except (ValueError, TypeError):
+            location.latitude = None
+    
+    if longitude == '' or longitude is None:
+        location.longitude = None
+    else:
+        try:
+            location.longitude = float(longitude)
+        except (ValueError, TypeError):
+            location.longitude = None
+    
     location.updated_at = datetime.utcnow()
     
     db.session.commit()
@@ -237,12 +278,24 @@ def create_room(current_user, location_id):
     
     data = request.get_json()
     
+    # Handle area_sqft conversion
+    area_sqft = data.get('area_sqft')
+    
+    # Convert empty strings to None, otherwise try to convert to float
+    if area_sqft == '' or area_sqft is None:
+        area_sqft = None
+    else:
+        try:
+            area_sqft = float(area_sqft)
+        except (ValueError, TypeError):
+            area_sqft = None
+    
     room = Room(
         name=data['name'],
         description=data.get('description'),
         room_type=data.get('room_type'),
         floor=data.get('floor'),
-        area_sqft=data.get('area_sqft'),
+        area_sqft=area_sqft,
         location_id=location_id
     )
     
@@ -280,7 +333,19 @@ def update_room(current_user, room_id):
     room.description = data.get('description', room.description)
     room.room_type = data.get('room_type', room.room_type)
     room.floor = data.get('floor', room.floor)
-    room.area_sqft = data.get('area_sqft', room.area_sqft)
+    
+    # Handle area_sqft conversion
+    area_sqft = data.get('area_sqft', room.area_sqft)
+    
+    # Convert empty strings to None, otherwise try to convert to float
+    if area_sqft == '' or area_sqft is None:
+        room.area_sqft = None
+    else:
+        try:
+            room.area_sqft = float(area_sqft)
+        except (ValueError, TypeError):
+            room.area_sqft = None
+    
     room.updated_at = datetime.utcnow()
     
     db.session.commit()

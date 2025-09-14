@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
+
 import { 
   Tooltip,
   TooltipContent,
@@ -37,12 +38,16 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight as ChevronRightIcon
+  ChevronRight as ChevronRightIcon,
+  Zap,
+  CreditCard,
+  Shield
 } from 'lucide-react'
 
 export default function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) {
   const { user, logout, hasPermission } = useAuth()
   const [expandedItems, setExpandedItems] = useState(['dashboard', 'management'])
+  
 
   const toggleExpanded = (itemId) => {
     setExpandedItems(prev => 
@@ -58,6 +63,20 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
       label: 'Dashboard',
       icon: Home,
       path: '/',
+      type: 'single'
+    },
+    {
+      id: 'automations',
+      label: 'Automations',
+      icon: Zap,
+      path: '/automations',
+      type: 'single'
+    },
+    {
+      id: 'billing',
+      label: 'Billing',
+      icon: CreditCard,
+      path: '/billing',
       type: 'single'
     },
     {
@@ -87,11 +106,18 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
           path: '/matter-thread',
           type: 'single'
         },
-        ...(hasPermission('manage_users') ? [{
+        ...(hasPermission('users', 'manage') ? [{
           id: 'users',
           label: 'User Management',
           icon: Users,
           path: '/users',
+          type: 'single'
+        }] : []),
+        ...(hasPermission('users', 'manage') ? [{
+          id: 'rbac',
+          label: 'RBAC Management',
+          icon: Shield,
+          path: '/rbac',
           type: 'single'
         }] : [])
       ]
@@ -124,22 +150,16 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
           <CollapsibleTrigger asChild>
             <Button
               variant="ghost"
-              className={`w-full justify-start h-10 px-3 ${
-                isCollapsed ? 'px-2' : 'px-3'
-              } ${level > 0 ? 'ml-4' : ''}`}
+              className={`w-full justify-start h-10 px-3 ${level > 0 ? 'ml-4' : ''}`}
             >
-              <item.icon className={`h-4 w-4 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-              {!isCollapsed && (
-                <>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {hasChildren && (
-                    isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
-                  )}
-                </>
+              <item.icon className="h-4 w-4 mr-3" />
+              <span className="flex-1 text-left">{item.label}</span>
+              {hasChildren && (
+                isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
               )}
             </Button>
           </CollapsibleTrigger>
-          {hasChildren && !isCollapsed && (
+          {hasChildren && (
             <CollapsibleContent className="space-y-1">
               {item.children.map(child => renderNavItem(child, level + 1))}
             </CollapsibleContent>
@@ -152,66 +172,31 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
       <Button
         key={item.id}
         variant={isActive ? "secondary" : "ghost"}
-        className={`sidebar-item-modern w-full justify-start h-10 px-3 ${
-          isCollapsed ? 'px-2' : 'px-3'
-        } ${level > 0 ? 'ml-4' : ''} ${
+        className={`sidebar-item-modern w-full justify-start h-10 px-3 ${level > 0 ? 'ml-4' : ''} ${
           isActive ? 'active' : ''
         } interactive-hover`}
         onClick={() => onPageChange(item.id)}
       >
-        <item.icon className={`h-4 w-4 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-        {!isCollapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
+        <item.icon className="h-4 w-4 mr-3" />
+        <span className="flex-1 text-left font-medium">{item.label}</span>
       </Button>
     )
-
-    if (isCollapsed) {
-      return (
-        <Tooltip key={item.id}>
-          <TooltipTrigger asChild>
-            {button}
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{item.label}</p>
-          </TooltipContent>
-        </Tooltip>
-      )
-    }
 
     return button
   }
 
   return (
     <TooltipProvider>
-      <div className={`sidebar-modern flex flex-col h-full transition-all duration-300 ${
-        isCollapsed ? 'w-16' : 'w-64'
-      }`}>
+      <div className="sidebar-modern flex flex-col h-full transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border/50">
-        {!isCollapsed && (
-          <div className="flex items-center space-x-3 animate-slide-in-left">
-            <div className="device-icon-container">
-              <Activity className="h-5 w-5" />
-            </div>
-            <span className="font-bold text-xl text-gradient-modern">IoT Platform</span>
-          </div>
-        )}
-        {isCollapsed && (
-          <div className="device-icon-container mx-auto animate-scale-in-bounce">
+        <div className="flex items-center space-x-3 animate-slide-in-left">
+          <div className="device-icon-container">
             <Activity className="h-5 w-5" />
           </div>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          className="btn-modern h-8 w-8 p-0"
-        >
-          {isCollapsed ? (
-            <ChevronRightIcon className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+          <span className="font-bold text-xl text-gradient-modern">IoT Platform</span>
+        </div>
+        {/* Collapse button removed - sidebar always expanded */}
       </div>
 
       {/* Navigation */}
@@ -227,17 +212,11 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className={`w-full justify-start h-10 px-3 ${
-                isCollapsed ? 'px-2' : 'px-3'
-              }`}
+              className="w-full justify-start h-10 px-3"
             >
-              <User className={`h-4 w-4 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-              {!isCollapsed && (
-                <>
-                  <span className="flex-1 text-left truncate">{user?.username}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </>
-              )}
+              <User className="h-4 w-4 mr-3" />
+              <span className="flex-1 text-left truncate">{user?.username}</span>
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

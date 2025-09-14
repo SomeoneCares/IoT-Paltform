@@ -324,7 +324,7 @@ export default function Settings() {
                       />
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{user?.role}</Badge>
+                      <Badge variant="outline">{user?.role?.name || 'No Role'}</Badge>
                       <span className="text-sm text-gray-500">Role</span>
                     </div>
                     <Button type="submit" disabled={saving}>

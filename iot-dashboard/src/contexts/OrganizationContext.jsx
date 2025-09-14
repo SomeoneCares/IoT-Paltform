@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
+import { authenticatedApiRequest } from '../lib/api'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const OrganizationContext = createContext()
 
@@ -18,23 +21,13 @@ export const OrganizationProvider = ({ children }) => {
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const API_BASE = 'http://localhost:5000/api'
-
   const fetchOrganizations = async () => {
-    if (!user) return
+    if (!user || !token) return
     
     setLoading(true)
     try {
-      const response = await fetch(`${API_BASE}/organizations`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setOrganizations(data)
-      }
+      const data = await authenticatedApiRequest('/organizations', {}, token)
+      setOrganizations(data)
     } catch (error) {
       console.error('Error fetching organizations:', error)
     } finally {

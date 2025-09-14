@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
+import { authenticatedApiRequest } from '../lib/api'
 
 const DeviceContext = createContext()
 
@@ -17,24 +18,14 @@ export const DeviceProvider = ({ children }) => {
   const [loading, setLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(Date.now())
 
-  const API_BASE = 'http://localhost:5000/api'
-
   const fetchDevices = async () => {
-    if (!user) return
+    if (!user || !token) return
     
     setLoading(true)
     try {
-      const response = await fetch(`${API_BASE}/devices?user_id=${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const devicesData = await response.json()
-        setDevices(devicesData)
-        setLastRefresh(Date.now())
-      }
+      const devicesData = await authenticatedApiRequest('/devices', {}, token)
+      setDevices(devicesData)
+      setLastRefresh(Date.now())
     } catch (error) {
       console.error('Error fetching devices:', error)
     } finally {
@@ -43,79 +34,54 @@ export const DeviceProvider = ({ children }) => {
   }
 
   const addDevice = async (deviceData) => {
+    if (!token) return { success: false, error: 'Authentication required' }
+    
     try {
-      const response = await fetch(`${API_BASE}/devices`, {
+      const newDevice = await authenticatedApiRequest('/devices', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...deviceData,
-          user_id: user.id
-        })
-      })
-
-      if (response.ok) {
-        const newDevice = await response.json()
-        setDevices(prev => [...prev, newDevice])
-        setLastRefresh(Date.now())
-        return { success: true, device: newDevice }
-      } else {
-        const error = await response.json()
-        return { success: false, error: error.error }
-      }
+        body: JSON.stringify(deviceData)
+      }, token)
+      
+      setDevices(prev => [...prev, newDevice])
+      setLastRefresh(Date.now())
+      return { success: true, device: newDevice }
     } catch (error) {
-      return { success: false, error: 'Network error' }
+      return { success: false, error: error.message }
     }
   }
 
   const updateDevice = async (deviceId, updateData) => {
+    if (!token) return { success: false, error: 'Authentication required' }
+    
     try {
-      const response = await fetch(`${API_BASE}/devices/${deviceId}`, {
+      const updatedDevice = await authenticatedApiRequest(`/devices/${deviceId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(updateData)
-      })
-
-      if (response.ok) {
-        const updatedDevice = await response.json()
-        setDevices(prev => prev.map(device => 
-          device.device_id === deviceId ? updatedDevice : device
-        ))
-        setLastRefresh(Date.now())
-        return { success: true, device: updatedDevice }
-      } else {
-        const error = await response.json()
-        return { success: false, error: error.error }
-      }
+      }, token)
+      
+      setDevices(prev => prev.map(device => 
+        device.device_id === deviceId ? updatedDevice : device
+      ))
+      setLastRefresh(Date.now())
+      return { success: true, device: updatedDevice }
     } catch (error) {
-      return { success: false, error: 'Network error' }
+      return { success: false, error: error.message }
     }
   }
 
   const deleteDevice = async (deviceId) => {
+    if (!token) return { success: false, error: 'Authentication required' }
+    
     try {
-      const response = await fetch(`${API_BASE}/devices/${deviceId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        setDevices(prev => prev.filter(device => device.device_id !== deviceId))
-        setLastRefresh(Date.now())
-        return { success: true }
-      } else {
-        const error = await response.json()
-        return { success: false, error: error.error }
-      }
+      await authenticatedApiRequest(`/devices/${deviceId}`, {
+        method: 'DELETE'
+      }, token)
+      
+      setDevices(prev => prev.filter(device => device.device_id !== deviceId))
+      setLastRefresh(Date.now())
+      return { success: true }
     } catch (error) {
-      return { success: false, error: 'Network error' }
+      return { success: false, error: error.message }
     }
   }
 

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { DeviceProvider, useDevices } from '@/contexts/DeviceContext'
 import { OrganizationProvider } from '@/contexts/OrganizationContext'
+import { AutomationProvider, useAutomations } from '@/contexts/AutomationContext'
+import { BillingProvider } from '@/contexts/BillingContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import Sidebar from '@/components/Sidebar.jsx'
 import MobileSidebar from '@/components/MobileSidebar.jsx'
@@ -11,6 +13,9 @@ import UserManagement from '@/components/UserManagement'
 import DeviceManagement from '@/components/DeviceManagement'
 import OrganizationManagement from '@/components/OrganizationManagement'
 import MatterThreadManagement from '@/components/MatterThreadManagement'
+import AutomationManagement from '@/components/AutomationManagement'
+import BillingManagement from '@/components/BillingManagement'
+import RBACManagement from '@/components/RBACManagement'
 import Settings from '@/components/Settings'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
@@ -30,9 +35,7 @@ import {
   Plus,
   BarChart3,
   Zap,
-  Menu,
-  PanelLeftClose,
-  PanelLeftOpen
+  Menu
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import './App.css'
@@ -162,6 +165,7 @@ function DeviceDataChart({ deviceId, dataType }) {
 
 function Dashboard({ onPageChange }) {
   const { devices, loading } = useDevices()
+  const { automations } = useAutomations()
   const [selectedDevice, setSelectedDevice] = useState(null)
 
   useEffect(() => {
@@ -172,6 +176,7 @@ function Dashboard({ onPageChange }) {
 
   const onlineDevices = devices.filter(d => d.status === 'online').length
   const totalDevices = devices.length
+  const totalAutomations = automations.length
 
   if (loading) {
     return (
@@ -189,106 +194,109 @@ function Dashboard({ onPageChange }) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           <Card className="stats-card-modern animate-fade-in-up">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3">
               <div>
                 <CardTitle className="text-sm font-medium opacity-90">Total Devices</CardTitle>
-                <div className="stats-number">{totalDevices}</div>
+                <div className="text-2xl font-bold">{totalDevices}</div>
               </div>
-              <div className="device-icon-container">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg">
                 <Activity className="h-5 w-5" />
               </div>
             </CardHeader>
           </Card>
           
           <Card className="gradient-card-success animate-fade-in-up" style={{animationDelay: '0.1s'}}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3">
               <div>
                 <CardTitle className="text-sm font-medium opacity-90">Online Devices</CardTitle>
-                <div className="stats-number">{onlineDevices}</div>
+                <div className="text-2xl font-bold">{onlineDevices}</div>
               </div>
-              <div className="device-icon-container bg-white/20">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg">
                 <Wifi className="h-5 w-5 animate-pulse-glow" />
               </div>
             </CardHeader>
           </Card>
           
           <Card className="gradient-card-danger animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3">
               <div>
                 <CardTitle className="text-sm font-medium opacity-90">Offline Devices</CardTitle>
-                <div className="stats-number">{totalDevices - onlineDevices}</div>
+                <div className="text-2xl font-bold">{totalDevices - onlineDevices}</div>
               </div>
-              <div className="device-icon-container bg-white/20">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg">
                 <WifiOff className="h-5 w-5" />
               </div>
             </CardHeader>
           </Card>
           
           <Card className="gradient-card-warning animate-fade-in-up" style={{animationDelay: '0.3s'}}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3">
               <div>
                 <CardTitle className="text-sm font-medium opacity-90">Automation Rules</CardTitle>
-                <div className="stats-number">0</div>
+                <div className="text-2xl font-bold">{totalAutomations}</div>
               </div>
-              <div className="device-icon-container bg-white/20">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg">
                 <Zap className="h-5 w-5" />
               </div>
             </CardHeader>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Devices List */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Devices</CardTitle>
-                  <Button size="sm" variant="outline" onClick={() => onPageChange('devices')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Device
-                  </Button>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Devices ({devices.length})</CardTitle>
+                <Button size="sm" variant="outline" onClick={() => onPageChange('devices')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Device
+                </Button>
+              </div>
+              <CardDescription>
+                Manage your connected IoT devices
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {devices.map((device) => (
+                <DeviceCard 
+                  key={device.id} 
+                  device={device} 
+                  onDeviceClick={setSelectedDevice}
+                />
+              ))}
+              {devices.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No devices found. Start the edge gateway simulator to see devices.
                 </div>
-                <CardDescription>
-                  Manage your connected IoT devices
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {devices.map((device) => (
-                  <DeviceCard 
-                    key={device.id} 
-                    device={device} 
-                    onDeviceClick={setSelectedDevice}
-                  />
-                ))}
-                {devices.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No devices found. Start the edge gateway simulator to see devices.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Device Details and Charts */}
-          <div className="lg:col-span-2">
-            {selectedDevice ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
+          <Card>
+            <CardHeader>
+              <CardTitle>Device Details</CardTitle>
+              <CardDescription>
+                {selectedDevice ? `Viewing details for ${selectedDevice.name}` : 'Select a device to view details'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {selectedDevice ? (
+                <div>
+                  <div className="flex items-center space-x-3 mb-4">
                     {(() => {
                       const IconComponent = deviceIcons[selectedDevice.device_type] || deviceIcons.default
-                      return <IconComponent className="h-5 w-5 mr-2" />
+                      return <IconComponent className="h-5 w-5" />
                     })()}
-                    {selectedDevice.name}
-                  </CardTitle>
-                  <CardDescription>
-                    {selectedDevice.device_type.replace('_', ' ')} in {selectedDevice.location}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                    <div>
+                      <h3 className="font-semibold">{selectedDevice.name}</h3>
+                      <p className="text-sm text-gray-500">{selectedDevice.device_type.replace('_', ' ')} in {selectedDevice.location}</p>
+                    </div>
+                  </div>
+                  
                   <Tabs defaultValue="overview" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -315,7 +323,7 @@ function Dashboard({ onPageChange }) {
                         <div>
                           <label className="text-sm font-medium">Last Seen</label>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(selectedDevice.last_seen).toLocaleString()}
+                            {selectedDevice.last_seen ? new Date(selectedDevice.last_seen).toLocaleString() : 'Never'}
                           </p>
                         </div>
                       </div>
@@ -375,19 +383,16 @@ function Dashboard({ onPageChange }) {
                       </div>
                     </TabsContent>
                   </Tabs>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="flex items-center justify-center h-96">
-                  <div className="text-center text-muted-foreground">
-                    <Activity className="h-12 w-12 mx-auto mb-4" />
-                    <p>Select a device to view details</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+                  <h3 className="text-base font-medium text-gray-900 mb-2">No device selected</h3>
+                  <p className="text-sm text-gray-500">Click on a device from the list to view its details</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -398,9 +403,8 @@ function MainApp() {
   const { user, loading } = useAuth()
   const { refreshDevices } = useDevices()
   const [currentPage, setCurrentPage] = useState('dashboard')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [sidebarVisible, setSidebarVisible] = useState(true)
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Always false - sidebar always expanded
+  const [sidebarVisible, setSidebarVisible] = useState(true) // Always true - sidebar always open
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
@@ -410,15 +414,8 @@ function MainApp() {
     }
   }
 
-  const toggleSidebar = () => {
-    console.log('Toggle sidebar clicked, current state:', sidebarVisible)
-    setSidebarVisible(!sidebarVisible)
-  }
+  // Removed toggleSidebar function - sidebar is always visible
 
-  const toggleMobileSidebar = () => {
-    console.log('Toggle mobile sidebar clicked, current state:', mobileSidebarOpen)
-    setMobileSidebarOpen(!mobileSidebarOpen)
-  }
 
   if (loading) {
     return (
@@ -439,6 +436,10 @@ function MainApp() {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard onPageChange={handlePageChange} />
+      case 'automations':
+        return <AutomationManagement />
+      case 'billing':
+        return <BillingManagement />
       case 'devices':
         return <DeviceManagement />
       case 'organizations':
@@ -447,6 +448,8 @@ function MainApp() {
         return <MatterThreadManagement />
       case 'users':
         return <UserManagement />
+      case 'rbac':
+        return <RBACManagement />
       case 'settings':
         return <Settings />
       case 'profile':
@@ -469,7 +472,7 @@ function MainApp() {
                   </div>
                   <div>
                     <label className="text-sm font-medium">Role</label>
-                    <Badge variant="outline">{user.role}</Badge>
+                    <Badge variant="outline">{user.role?.name || 'No Role'}</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -483,68 +486,26 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
-      {sidebarVisible && (
-        <div className={`hidden lg:flex transition-all duration-300 ${
-          sidebarCollapsed ? 'w-16' : 'w-64'
-        }`}>
-          <Sidebar 
-            currentPage={currentPage} 
-            onPageChange={handlePageChange}
-            isCollapsed={sidebarCollapsed}
-            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          />
-        </div>
-      )}
+      {/* Desktop Sidebar - Always visible */}
+      <div className="flex transition-all duration-300 w-64">
+        <Sidebar 
+          currentPage={currentPage} 
+          onPageChange={handlePageChange}
+          isCollapsed={false}
+          onToggleCollapse={() => {}} // Disabled - sidebar always expanded
+        />
+      </div>
 
       {/* Mobile Sidebar */}
       <MobileSidebar
         currentPage={currentPage}
         onPageChange={handlePageChange}
-        isOpen={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
+        isOpen={false}
+        onClose={() => {}}
       />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-background">
-          <div className="flex items-center space-x-4">
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMobileSidebar}
-              className="lg:hidden h-8 w-8 p-0"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-            
-            {/* Desktop Sidebar Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSidebar}
-              className="hidden lg:flex h-8 w-8 p-0"
-              title={sidebarVisible ? "Hide Sidebar" : "Show Sidebar"}
-            >
-              {sidebarVisible ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                <Activity className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold">IoT Platform</span>
-              {!sidebarVisible && (
-                <span className="text-xs text-muted-foreground ml-2">(Sidebar Hidden)</span>
-              )}
-            </div>
-          </div>
-          
-          {/* Right side of header - could add user menu here later */}
-          <div className="w-8" />
-        </div>
 
         {/* Page Content */}
         <div className="flex-1 overflow-auto">
@@ -561,7 +522,11 @@ function App() {
       <AuthProvider>
         <OrganizationProvider>
           <DeviceProvider>
-            <MainApp />
+            <AutomationProvider>
+              <BillingProvider>
+                <MainApp />
+              </BillingProvider>
+            </AutomationProvider>
           </DeviceProvider>
         </OrganizationProvider>
       </AuthProvider>
