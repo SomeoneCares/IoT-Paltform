@@ -11,7 +11,7 @@ from src.routes.device import device_bp
 from src.routes.auth import auth_bp
 from src.routes.organization import organization_bp
 from src.routes.matter_thread import matter_thread_bp
-# from src.routes.analytics import analytics_bp  # Temporarily disabled for deployment
+from src.routes.analytics import analytics_bp
 from src.models.device import Device, DeviceData, AutomationRule, ThreadNetwork
 from src.models.organization import Organization, Location, Room, OrganizationMember
 from src.services.mqtt_service import init_mqtt_service
@@ -28,7 +28,7 @@ app.register_blueprint(device_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(organization_bp, url_prefix='/api')
 app.register_blueprint(matter_thread_bp, url_prefix='/api')
-# app.register_blueprint(analytics_bp, url_prefix='/api/analytics')  # Temporarily disabled
+app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
 
 # uncomment if you need to use database
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"

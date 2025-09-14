@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import './App.css'
+import './modern-styles.css'
 
 // API base URL
 const API_BASE = 'http://localhost:5000/api'
@@ -66,33 +67,44 @@ function DeviceCard({ device, onDeviceClick }) {
   
   return (
     <Card 
-      className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+      className="device-card-modern cursor-pointer animate-fade-in-up interactive-hover"
       onClick={() => onDeviceClick(device)}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{device.name}</CardTitle>
-        <IconComponent className="h-4 w-4 text-muted-foreground" />
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <div className="flex items-center space-x-3">
+          <div className="device-icon-container">
+            <IconComponent className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-semibold text-gradient-modern">{device.name}</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">{device.location}</p>
+          </div>
+        </div>
+        <div className="status-indicator">
+          <div className={`status-dot ${device.status}`}></div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <Badge className={colorClass}>
+      <CardContent className="pt-0">
+        <div className="flex items-center justify-between mb-3">
+          <Badge className={`${colorClass} px-3 py-1 rounded-full font-medium`}>
             {device.device_type.replace('_', ' ')}
           </Badge>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             {device.status === 'online' ? (
-              <Wifi className="h-3 w-3 text-green-500" />
+              <Wifi className="h-4 w-4 text-green-500 animate-pulse-glow" />
             ) : (
-              <WifiOff className="h-3 w-3 text-red-500" />
+              <WifiOff className="h-4 w-4 text-red-500" />
             )}
-            <span className={`text-xs ${device.status === 'online' ? 'text-green-500' : 'text-red-500'}`}>
+            <span className={`text-sm font-medium ${device.status === 'online' ? 'text-green-600' : 'text-red-600'}`}>
               {device.status}
             </span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{device.location}</p>
-        <p className="text-xs text-muted-foreground">
-          Last seen: {new Date(device.last_seen).toLocaleString()}
-        </p>
+        <div className="glass-card p-3 rounded-lg">
+          <p className="text-xs text-muted-foreground">
+            Last seen: <span className="font-medium">{new Date(device.last_seen).toLocaleString()}</span>
+          </p>
+        </div>
       </CardContent>
     </Card>
   )
@@ -178,44 +190,52 @@ function Dashboard({ onPageChange }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Devices</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+          <Card className="stats-card-modern animate-fade-in-up">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-sm font-medium opacity-90">Total Devices</CardTitle>
+                <div className="stats-number">{totalDevices}</div>
+              </div>
+              <div className="device-icon-container">
+                <Activity className="h-5 w-5" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalDevices}</div>
-            </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Online Devices</CardTitle>
-              <Wifi className="h-4 w-4 text-green-500" />
+          <Card className="gradient-card-success animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-sm font-medium opacity-90">Online Devices</CardTitle>
+                <div className="stats-number">{onlineDevices}</div>
+              </div>
+              <div className="device-icon-container bg-white/20">
+                <Wifi className="h-5 w-5 animate-pulse-glow" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{onlineDevices}</div>
-            </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Offline Devices</CardTitle>
-              <WifiOff className="h-4 w-4 text-red-500" />
+          <Card className="gradient-card-danger animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-sm font-medium opacity-90">Offline Devices</CardTitle>
+                <div className="stats-number">{totalDevices - onlineDevices}</div>
+              </div>
+              <div className="device-icon-container bg-white/20">
+                <WifiOff className="h-5 w-5" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{totalDevices - onlineDevices}</div>
-            </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Automation Rules</CardTitle>
-              <Zap className="h-4 w-4 text-muted-foreground" />
+          <Card className="gradient-card-warning animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-sm font-medium opacity-90">Automation Rules</CardTitle>
+                <div className="stats-number">0</div>
+              </div>
+              <div className="device-icon-container bg-white/20">
+                <Zap className="h-5 w-5" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-            </CardContent>
           </Card>
         </div>
 

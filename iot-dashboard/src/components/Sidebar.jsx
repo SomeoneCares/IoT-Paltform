@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import '../modern-styles.css'
 import { 
   Collapsible,
   CollapsibleContent,
@@ -151,15 +152,15 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
       <Button
         key={item.id}
         variant={isActive ? "secondary" : "ghost"}
-        className={`w-full justify-start h-10 px-3 ${
+        className={`sidebar-item-modern w-full justify-start h-10 px-3 ${
           isCollapsed ? 'px-2' : 'px-3'
         } ${level > 0 ? 'ml-4' : ''} ${
-          isActive ? 'bg-accent text-accent-foreground' : ''
-        }`}
+          isActive ? 'active' : ''
+        } interactive-hover`}
         onClick={() => onPageChange(item.id)}
       >
         <item.icon className={`h-4 w-4 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-        {!isCollapsed && <span className="flex-1 text-left">{item.label}</span>}
+        {!isCollapsed && <span className="flex-1 text-left font-medium">{item.label}</span>}
       </Button>
     )
 
@@ -181,29 +182,29 @@ export default function Sidebar({ currentPage, onPageChange, isCollapsed, onTogg
 
   return (
     <TooltipProvider>
-      <div className={`flex flex-col h-full bg-background border-r transition-all duration-300 ${
+      <div className={`sidebar-modern flex flex-col h-full transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b border-border/50">
         {!isCollapsed && (
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Activity className="h-5 w-5 text-primary-foreground" />
+          <div className="flex items-center space-x-3 animate-slide-in-left">
+            <div className="device-icon-container">
+              <Activity className="h-5 w-5" />
             </div>
-            <span className="font-semibold text-lg">IoT Platform</span>
+            <span className="font-bold text-xl text-gradient-modern">IoT Platform</span>
           </div>
         )}
         {isCollapsed && (
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
-            <Activity className="h-5 w-5 text-primary-foreground" />
+          <div className="device-icon-container mx-auto animate-scale-in-bounce">
+            <Activity className="h-5 w-5" />
           </div>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggleCollapse}
-          className="h-8 w-8 p-0"
+          className="btn-modern h-8 w-8 p-0"
         >
           {isCollapsed ? (
             <ChevronRightIcon className="h-4 w-4" />
